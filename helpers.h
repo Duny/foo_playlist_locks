@@ -52,8 +52,8 @@ class playlist_lock_impl_simple : public playlist_lock
 // locks installed on this playlist
 typedef boost::tuple<t_size, pfc::list_t<GUID>> playlist_lock_data;
 
-FB2K_STREAM_READER_OVERLOAD(pfc::list_t<GUID>) { t_size n = 0; stream >> n; GUID g; while (n --> 0) { stream >> g; value.add_item (g); } return stream;  }
-FB2K_STREAM_WRITER_OVERLOAD(pfc::list_t<GUID>) { t_size n = value.get_size (); while (n --> 0) stream << value[n]; return stream; }
+FB2K_STREAM_READER_OVERLOAD(pfc::list_t<GUID>) { t_size n = 0; stream >> n; GUID g; while (n --> 0) { stream >> g; value.add_item (g); } return stream; }
+FB2K_STREAM_WRITER_OVERLOAD(pfc::list_t<GUID>) { t_size n = value.get_size (); stream << n; while (n --> 0) stream << value[n]; return stream; }
 
 FB2K_STREAM_READER_OVERLOAD(playlist_lock_data) { return read_tuple (stream, value); }
 FB2K_STREAM_WRITER_OVERLOAD(playlist_lock_data) { return write_tuple (stream, value); }

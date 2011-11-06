@@ -31,11 +31,12 @@ namespace playlist_locks
             p_flags = 0;
 
             static_api_ptr_t<playlist_manager> pm_api;
+            static_api_ptr_t<lock_manager> lm_api;
             t_size active_playlist;
 
             // menu items available when active playlist is not autoplaylist
             // and active playlist is not locked by some other lock
-            if (p_index >= get_lock_manager ()->get_lock_type_count () ||
+            if (p_index >= lm_api->get_lock_type_count () ||
                 ((active_playlist = pm_api->get_active_playlist ()) == pfc_infinite) ||
                 static_api_ptr_t<autoplaylist_manager>()->is_client_present (active_playlist)) {
                 p_flags |= flag_disabled;
@@ -51,10 +52,10 @@ namespace playlist_locks
             }
 
             // menu item text is taken from lock implementation class
-            get_lock_manager ()->get_lock_type (p_index)->get_lock_name (p_text);
+            lm_api->get_lock_type (p_index)->get_lock_name (p_text);
             
             // check menu item if lock is present on active playlist
-            if (get_lock_manager ()->playlist_lock_present (active_playlist, p_index))
+            if (lm_api->playlist_has_lock (active_playlist, p_index))
                 p_flags |= flag_checked;
             
             return true;

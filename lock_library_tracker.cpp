@@ -72,5 +72,5 @@ public:
         GUID get_guid () const { return guid_inline<0xe33d9a0c, 0xdec1, 0x493f, 0x9c, 0xa7, 0x81, 0x35, 0x73, 0x38, 0x16, 0x78>::guid; };
     };
 
-    static register_lock_type_t<media_library_tracker> g_lock_ml_tracker;
+    static register_playlist_lock_special_t<media_library_tracker> g_media_library_tracker_lock;
 }

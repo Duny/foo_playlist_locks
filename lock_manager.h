@@ -15,23 +15,30 @@ namespace playlist_locks
     {
         FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(lock_manager)
     public:
-        virtual const service_ptr_t<playlist_lock>& get_lock () const = 0;
+        virtual const service_ptr_t<playlist_lock>& get_foobar2000_lock () const = 0;
 
-        virtual void register_lock_type (playlist_lock_special *p_lock) = 0;
         virtual t_size get_lock_type_count () const = 0;
-        virtual playlist_lock_special *get_lock_type (t_size p_index) const = 0;
-        virtual bool playlist_lock_present (t_size p_playlist, t_size p_lock_index) = 0;
-        // adds of removes lock p_lock_index to the list of locks installed on playlist p_playlist
-        virtual void playlist_lock_toggle (t_size p_playlist, t_size p_lock_index) = 0;
+        virtual playlist_lock_special * const get_lock_type (t_size p_index) const = 0;
+
+        virtual bool playlist_has_lock (t_size p_playlist, const playlist_lock_special *p_lock) = 0;
+        inline bool playlist_has_lock (t_size p_playlist, t_size p_index) { return playlist_has_lock (p_playlist, get_lock_type (p_index)); }
+
+        // adds or removes lock p_index to the list of locks installed on playlist p_playlist
+        virtual void playlist_lock_toggle (t_size p_playlist, const playlist_lock_special *p_lock) = 0;
+        inline void playlist_lock_toggle (t_size p_playlist, t_size p_index) { return playlist_lock_toggle (p_playlist, get_lock_type (p_index)); }
+
+        static void register_lock_type (playlist_lock_special *p_lock);
     };
     typedef static_api_ptr_t<lock_manager> get_lock_manager;
 
-    // helper class
-    template <class playlist_lock_special_t>
-    class register_lock_type_t : public playlist_lock_special_t
+
+    // helper
+    template <class playlist_lock_special_impl>
+    class register_playlist_lock_special_t
     {
+        playlist_lock_special_impl m_lock;
     public:
-        register_lock_type_t () { get_lock_manager ()->register_lock_type (this); }
+        register_playlist_lock_special_t () { lock_manager::register_lock_type (&m_lock); }
     };
 
 

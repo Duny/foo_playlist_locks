@@ -14,10 +14,10 @@ public:
 
     void callback_run()
     {
-        int is_my;
+        /*int is_my;
         if (t_pm_v2()->playlist_get_property_int(m_index, my_playlist_property, is_my) 
             && is_my == 1)
-            t_pm()->playlist_lock_install(m_index, g_lock);
+            t_pm()->playlist_lock_install(m_index, g_lock);*/
     }
 
 private:
