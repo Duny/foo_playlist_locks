@@ -22,7 +22,7 @@ GUID my_mainmenu_edit_popup::get_guid()
 
 GUID my_mainmenu_edit_popup::get_parent()
 {
-	return mainmenu_groups::edit_part3;
+	return mainmenu_groups::edit;
 }
 
 t_uint32 my_mainmenu_edit_popup::get_sort_priority()
@@ -65,7 +65,7 @@ bool my_mainmenu_commands::get_description(t_uint32 p_index, pfc::string_base & 
 
 GUID my_mainmenu_commands::get_parent()
 {
-	return my_popup;
+	return mainmenu_groups::edit;
 }
 
 bool my_mainmenu_commands::get_display(t_uint32 p_index,pfc::string_base & p_text,t_uint32 & p_flags)

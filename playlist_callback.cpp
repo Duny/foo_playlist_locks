@@ -30,3 +30,11 @@ void my_playlist_callback_static::on_playlist_created(t_size p_index,const char 
     static_api_ptr_t<main_thread_callback_manager>()->add_callback (
 		new service_impl_t<my_check_playlist_callback>(p_index));
 } 
+
+void my_playlist_callback_static::on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count)
+{
+    console::formatter f;
+    
+    for (t_size i = 0; i < p_old_count; i++)
+        f << p_mask[i] << " ";
+}

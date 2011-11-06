@@ -103,11 +103,57 @@ public:
 	
 };
 
-class NOVTABLE lock_manager : playlist_lock
+namespace playlist_locks
 {
-public:
-    FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(lock_manager);
-};
+    class playlist_lock_simple : public playlist_lock
+    {
+        t_uint32 get_filter_mask () override { return 0; }
+
+        bool query_items_add (unsigned, metadb_handle_list_cref, const bit_array&) override { return true; }
+        bool query_items_reorder (const unsigned*, unsigned) override { return true; }
+        bool query_items_remove (const bit_array&, bool) override { return true; }
+        bool query_item_replace (unsigned, const metadb_handle_ptr&, const metadb_handle_ptr&) override { return true; }
+        bool query_playlist_rename (const char *, unsigned) override { return true; }
+        bool query_playlist_remove () override { return true; }
+        bool execute_default_action (unsigned) override { return false; }
+        void on_playlist_index_change (unsigned) override {}
+        void on_playlist_remove() override {}
+        void show_ui () override {}
+    };
+
+
+    class playlist_lock_special : public playlist_lock_simple
+    {
+    public:
+        virtual GUID get_guid () const = 0;
+    };
+    typedef service_ptr_t<playlist_lock_special> playlist_lock_special_ptr;
+
+
+    class lock_manager : public playlist_lock_simple
+    {
+        friend class service_impl_t<lock_manager>;
+        pfc::list_t<playlist_lock_special_ptr> m_registered_locks_list;
+
+
+        void get_lock_name (pfc::string_base &p_out) { p_out.set_string (COMPONENT_NAME); }
+
+        lock_manager () {}
+    public:
+        static const service_ptr_t<lock_manager> &get_instance ();
+
+        void register_lock_type (const playlist_lock_special_ptr &p_lock);
+    };
+
+    // helper class
+    template <class playlist_lock_special_t>
+    class register_lock_type_t
+    {
+        service_ptr_t<playlist_lock_special> m_lock;
+    public:
+        register_lock_type_t () : m_lock (new service_impl_t<playlist_lock_special_t> ()) { lock_manager::get_instance ()->register_lock_type (m_lock); }
+    };
+}
 
 // my_playlist_callback_static
 class my_playlist_callback_static : public playlist_callback_static
@@ -127,9 +173,9 @@ public:
 	virtual void on_items_replaced(t_size p_playlist,const bit_array & p_mask,const pfc::list_base_const_t<t_on_items_replaced_entry> & p_data) {}
 	virtual void on_item_ensure_visible(t_size p_playlist,t_size p_idx) {}
 	virtual void on_playlist_activate(t_size p_old,t_size p_new) {}
-	virtual void on_playlists_reorder(const t_size * p_order,t_size p_count) {}
+    virtual void on_playlists_reorder(const t_size * p_order,t_size p_count) {}
 	virtual void on_playlists_removing(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
-	virtual void on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count) {}
+	virtual void on_playlists_removed(const bit_array & p_mask,t_size p_old_count,t_size p_new_count);
 	virtual void on_playlist_renamed(t_size p_index,const char * p_new_name,t_size p_new_name_len) {}
 	virtual void on_default_format_changed() {}
 	virtual void on_playback_order_changed(t_size p_new_index) {}

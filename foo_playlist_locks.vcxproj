@@ -134,6 +134,7 @@
     <ClCompile Include="foo_playlist_locks.cpp" />
     <ClCompile Include="initquit.cpp" />
     <ClCompile Include="library_callback.cpp" />
+    <ClCompile Include="lock_manager.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="play_callback.cpp" />
     <ClCompile Include="playlist_callback.cpp" />
