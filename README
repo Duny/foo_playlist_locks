@@ -2,5 +2,6 @@ This is a foobar2000 component, providing playlist locks for tracking media libr
 
 Building
 In order to build, you will need to define some environment variables:
-1. FB2KSDK must point to the folder with foobar2000 SDK
-3. BUILD_BIN_DIR will be used for project's binary files (*.obj, etc)
+1. FB2KSDK must be pointing to the folder with foobar2000 SDK
+3. BUILD_BIN_DIR will be used for project's output binary files (*.obj, etc)
+4. BOOST must be pointing to the Boost library

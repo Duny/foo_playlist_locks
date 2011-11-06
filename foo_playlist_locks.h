@@ -18,16 +18,7 @@ bool get_playlist_remove_mask(
 // callbacks
 //
 
-// my_library_callback_dynamic
-class my_library_callback_dynamic : public library_callback_dynamic
-{
-public:
-    virtual void on_items_added(const pfc::list_base_const_t<metadb_handle_ptr> & p_data);
-	virtual void on_items_removed(const pfc::list_base_const_t<metadb_handle_ptr> & p_data);
 
-    // not used
-    virtual void on_items_modified(const pfc::list_base_const_t<metadb_handle_ptr> & p_data) {}
-};
  
 // my_play_callback
 class my_play_callback : public play_callback
@@ -50,30 +41,6 @@ public:
     virtual void on_playback_dynamic_info_track(const file_info & p_info) {}
     virtual void on_playback_time(double p_time) {}
     virtual void on_volume_change(float p_new_val) {}
-};
-
-// my_mainmenu_edit_popup
-class my_mainmenu_edit_popup : public mainmenu_group_popup
-{
-public:
-	virtual GUID get_guid();
-	virtual GUID get_parent();
-	virtual t_uint32 get_sort_priority();
-
-	virtual void get_display_string(pfc::string_base & p_out);
-};
-
-// my_mainmenu_commands
-class my_mainmenu_commands : public mainmenu_commands
-{
-public:
-	virtual t_uint32 get_command_count();
-	virtual GUID get_command(t_uint32 p_index);
-	virtual void get_name(t_uint32 p_index, pfc::string_base & p_out);
-	virtual bool get_description(t_uint32 p_index, pfc::string_base & p_out);
-	virtual GUID get_parent();
-	virtual bool get_display(t_uint32 p_index,pfc::string_base & p_text,t_uint32 & p_flags);
-	virtual void execute(t_uint32 p_index, service_ptr_t<service_base> p_callback);
 };
 
 // my_lock
@@ -103,57 +70,7 @@ public:
 	
 };
 
-namespace playlist_locks
-{
-    class playlist_lock_simple : public playlist_lock
-    {
-        t_uint32 get_filter_mask () override { return 0; }
 
-        bool query_items_add (unsigned, metadb_handle_list_cref, const bit_array&) override { return true; }
-        bool query_items_reorder (const unsigned*, unsigned) override { return true; }
-        bool query_items_remove (const bit_array&, bool) override { return true; }
-        bool query_item_replace (unsigned, const metadb_handle_ptr&, const metadb_handle_ptr&) override { return true; }
-        bool query_playlist_rename (const char *, unsigned) override { return true; }
-        bool query_playlist_remove () override { return true; }
-        bool execute_default_action (unsigned) override { return false; }
-        void on_playlist_index_change (unsigned) override {}
-        void on_playlist_remove() override {}
-        void show_ui () override {}
-    };
-
-
-    class playlist_lock_special : public playlist_lock_simple
-    {
-    public:
-        virtual GUID get_guid () const = 0;
-    };
-    typedef service_ptr_t<playlist_lock_special> playlist_lock_special_ptr;
-
-
-    class lock_manager : public playlist_lock_simple
-    {
-        friend class service_impl_t<lock_manager>;
-        pfc::list_t<playlist_lock_special_ptr> m_registered_locks_list;
-
-
-        void get_lock_name (pfc::string_base &p_out) { p_out.set_string (COMPONENT_NAME); }
-
-        lock_manager () {}
-    public:
-        static const service_ptr_t<lock_manager> &get_instance ();
-
-        void register_lock_type (const playlist_lock_special_ptr &p_lock);
-    };
-
-    // helper class
-    template <class playlist_lock_special_t>
-    class register_lock_type_t
-    {
-        service_ptr_t<playlist_lock_special> m_lock;
-    public:
-        register_lock_type_t () : m_lock (new service_impl_t<playlist_lock_special_t> ()) { lock_manager::get_instance ()->register_lock_type (m_lock); }
-    };
-}
 
 // my_playlist_callback_static
 class my_playlist_callback_static : public playlist_callback_static
@@ -180,14 +97,4 @@ public:
 	virtual void on_default_format_changed() {}
 	virtual void on_playback_order_changed(t_size p_new_index) {}
 	virtual void on_playlist_locked(t_size p_playlist,bool p_locked) {}
-};
-
-// my_initquit
-class my_initquit : public initquit
-{
-    my_library_callback_dynamic m_library_callback_dynamic;
-    my_play_callback m_play_callback;
-public:
-    void on_init();
-    void on_quit();
 };

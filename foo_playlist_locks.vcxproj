@@ -62,7 +62,7 @@
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(FB2KSDK);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_playlist_locks_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -98,7 +98,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(FB2KSDK);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_playlist_locks_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -132,11 +132,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="foo_playlist_locks.cpp" />
-    <ClCompile Include="initquit.cpp" />
-    <ClCompile Include="library_callback.cpp" />
+    <ClCompile Include="lock_library_tracker.cpp" />
     <ClCompile Include="lock_manager.cpp" />
-    <ClCompile Include="menu.cpp" />
-    <ClCompile Include="play_callback.cpp" />
+    <ClCompile Include="main_menu.cpp" />
+    <ClCompile Include="lock_remove_played.cpp" />
     <ClCompile Include="playlist_callback.cpp" />
     <ClCompile Include="playlist_lock.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -146,6 +145,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="foo_playlist_locks.h" />
+    <ClInclude Include="helpers.h" />
+    <ClInclude Include="lock_manager.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
