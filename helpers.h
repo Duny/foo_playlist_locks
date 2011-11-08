@@ -58,4 +58,33 @@ FB2K_STREAM_WRITER_OVERLOAD(pfc::list_t<GUID>) { t_size n = value.get_size (); s
 FB2K_STREAM_READER_OVERLOAD(playlist_lock_data) { return read_tuple (stream, value); }
 FB2K_STREAM_WRITER_OVERLOAD(playlist_lock_data) { return write_tuple (stream, value); }
 
+
+// helper: does not register itself. provides empty implementation of playlist_callback members only 
+class playlist_callback_impl_simple : public playlist_callback {
+public:
+    void on_items_added (t_size, t_size, const pfc::list_base_const_t<metadb_handle_ptr>&, const bit_array&) override {}
+    void on_items_reordered (t_size, const t_size*, t_size) override {}
+    void on_items_removing (t_size, const bit_array&, t_size, t_size) override {}
+    void on_items_removed (t_size, const bit_array&, t_size, t_size) override {}
+    void on_items_selection_change (t_size, const bit_array&, const bit_array&) override {}
+    void on_item_focus_change (t_size, t_size, t_size) override {}
+
+    void on_items_modified (t_size, const bit_array&) override {}
+    void on_items_modified_fromplayback (t_size, const bit_array&, play_control::t_display_level) override {}
+
+    void on_items_replaced (t_size, const bit_array&, const pfc::list_base_const_t<t_on_items_replaced_entry>&) override {}
+
+    void on_item_ensure_visible (t_size, t_size) override {}
+
+    void on_playlist_activate (t_size, t_size) override {}
+    void on_playlist_created (t_size, const char*, t_size) override {}
+    void on_playlists_reorder (const t_size*, t_size) override {}
+    void on_playlists_removing (const bit_array&, t_size, t_size) override {}
+    void on_playlists_removed (const bit_array&, t_size, t_size) override {}
+    void on_playlist_renamed (t_size, const char*, t_size) override {}
+
+    void on_default_format_changed () override {}
+    void on_playback_order_changed (t_size) override {}
+    void on_playlist_locked (t_size, bool) override {}
+};
 #endif

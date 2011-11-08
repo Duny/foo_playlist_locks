@@ -2,7 +2,7 @@
 
 DECLARE_COMPONENT_VERSION(COMPONENT_NAME, "0.2",
 "A component, that manages locked playlist. It feels playlist with music, \
-comming into Media Library, also it removes music, removed from Media Library.\n\
+coming into Media Library, also it removes music, removed from Media Library.\n\
 And also it removes played tracks from the playlist.\n\n\
 (c) 2010 Duny (majorquake3@gmail.com)");
 
