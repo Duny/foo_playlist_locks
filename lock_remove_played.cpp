@@ -70,7 +70,7 @@ namespace playlist_locks
 {
     class remove_played : public playlist_lock_special
     {
-        void get_lock_name (pfc::string_base &p_out) override { p_out.set_string ("Remove played"); }
+        void get_lock_name (pfc::string_base &p_out) const override { p_out.set_string ("Remove played"); }
         GUID get_guid () const { return guid_inline<0x62f9cebd, 0x3327, 0x483a, 0xa7, 0xb7, 0x44, 0x7d, 0x35, 0xdc, 0x7f, 0x31>::guid; };
     };
 

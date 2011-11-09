@@ -6,10 +6,24 @@ namespace playlist_locks
     {
         // playlist_lock implementation
         void get_lock_name (pfc::string_base &p_out) override { 
-            p_out.set_string (LOCK_NAME); 
+            pfc::string_formatter str = LOCK_NAME;
             auto playlist = static_api_ptr_t<playlist_manager>()->get_active_playlist ();
-            if (playlist != pfc_infinite) { // TODO: get list of locks, build string
+            if (playlist != pfc_infinite) {
+                pfc::list_t<playlist_lock_special_ptr> playlist_locks;
+
+                static_api_ptr_t<lock_manager>()->playlist_get_locks (playlist, playlist_locks);
+                if (playlist_locks.get_count ()) {
+                    str << "(";
+                    pfc::string8_fast lock_name;
+                    playlist_locks.for_each ([&] (playlist_lock_special_ptr p_lock)
+                    {
+                        p_lock->get_lock_name (lock_name);
+                        str << lock_name << ",";
+                    });
+                    str.replace_char (',', ')', str.length () - 1);
+                }
             }
+            p_out.set_string (str); 
         }
     };
 
@@ -62,6 +76,7 @@ namespace playlist_locks
         {
             insync (m_section);
 
+            // FIXME!!!!
             for (t_size i = 0, n = m_data.get_size (); i < n; ++i) {
                 auto playlist_index = m_data[i].get<0>();
                 if ((playlist_index < p_old_count && p_mask[playlist_index]) ||
@@ -79,9 +94,9 @@ namespace playlist_locks
         t_size get_lock_type_count () const override{ return get_registered_locks_list ().get_count (); }
 
         // no boundary check
-        playlist_lock_special * const get_lock_type (t_size p_index) const override { return get_registered_locks_list()[p_index]; }
+        playlist_lock_special_ptr get_lock_type (t_size p_index) const override { return get_registered_locks_list()[p_index]; }
 
-        bool playlist_has_lock (t_size p_playlist, const playlist_lock_special *p_lock) const override
+        bool playlist_has_lock (t_size p_playlist, playlist_lock_special_ptr p_lock) const override
         {
             insync (m_section);
 
@@ -92,9 +107,11 @@ namespace playlist_locks
             return false;
         }
 
-        void playlist_lock_toggle (t_size p_playlist, const playlist_lock_special *p_lock) override
+        void playlist_lock_toggle (t_size p_playlist, playlist_lock_special_ptr p_lock) override
         {
             insync (m_section);
+
+            static_api_ptr_t<playlist_manager> api;
 
             // get guid of the requested lock type
             auto lock_guid = p_lock->get_guid ();
@@ -107,29 +124,39 @@ namespace playlist_locks
                 else {
                     m_data[index].get<1>().remove_by_idx (guid_index);
                     if (m_data[index].get<1>().get_size () == 0) { // all lock types removed => uninstall lock and remove data item from list
-                        static_api_ptr_t<playlist_manager>()->playlist_lock_uninstall (p_playlist, m_lock);
+                        api->playlist_lock_uninstall (p_playlist, m_lock);
                         m_data.remove_by_idx (index);
+                        return;
                     }
                 }
-            }
-            else { // playlist not found in data -> install lock on it, add new item to m_data
-                static_api_ptr_t<playlist_manager>()->playlist_lock_install (p_playlist, m_lock);
 
+                // make foobar2000 call lock_simple->get_lock_name () for statusbar update
+                api->playlist_lock_uninstall (p_playlist, m_lock);
+                api->playlist_lock_install (p_playlist, m_lock);
+
+            }
+            else {
                 playlist_lock_data new_data;
                 new_data.get<0>() = p_playlist;
-                new_data.get<1>().add_item (lock_guid);
+                new_data.get<1>().add_item (lock_guid); 
                 m_data.add_item (new_data);
-                console::formatter() << "new_item " << new_data.get<0>();
+
+                api->playlist_lock_install (p_playlist, m_lock);
             }
         }
 
-        bool playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special*> &p_out) const override
+        bool playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special_ptr> &p_out) const override
         {
             insync (m_section);
 
-            auto index = find_lock_data_by_playlist_id (p_playlist);
-            if (index != pfc_infinite) {
-
+            auto data_index = find_lock_data_by_playlist_id (p_playlist);
+            if (data_index != pfc_infinite) {
+                p_out.remove_all ();
+                for (t_size i = 0, n = m_data[data_index].get<1>().get_size (); i < n; ++i) {                    ;
+                    if (playlist_lock_special_ptr lock_ptr = find_lock_ptr_by_guid (m_data[data_index].get<1>()[i]))
+                        p_out.add_item (lock_ptr);
+                }
+                return true;
             }
             else
                 return false;
@@ -141,6 +168,16 @@ namespace playlist_locks
             for (t_size i = 0, n = m_data.get_size (); i < n; ++i)
                 if (m_data[i].get<0> () == p_playlist) return i;
             return pfc_infinite;
+        }
+
+        inline playlist_lock_special * find_lock_ptr_by_guid (const GUID &p_guid) const
+        {
+            const registered_locks_list& p_list = get_registered_locks_list ();
+            for (t_size i = 0, n = p_list.get_size (); i < n; ++i) {
+                if (p_list[i]->get_guid () == p_guid)
+                    return p_list[i];
+            }
+            return nullptr;
         }
 
    public:

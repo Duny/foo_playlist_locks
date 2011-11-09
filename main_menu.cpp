@@ -45,7 +45,7 @@ namespace playlist_locks
             if (pm_api->playlist_lock_is_present (active_playlist)) {
                 pfc::string8_fast playlist_lock_name;
                 pm_api->playlist_lock_query_name (active_playlist, playlist_lock_name); 
-                if (playlist_lock_name != (pfc::string8 (LOCK_NAME))) {
+                if (playlist_lock_name.find_first (LOCK_NAME) == pfc_infinite) {
                     p_flags |= flag_disabled;
                     return true;
                 }
@@ -77,11 +77,14 @@ namespace playlist_locks
             if (pm_api->playlist_lock_is_present (active_playlist)) {
                 pfc::string8_fast playlist_lock_name;
                 pm_api->playlist_lock_query_name (active_playlist, playlist_lock_name); 
-                if (playlist_lock_name != (pfc::string8 (LOCK_NAME)))
+                if (playlist_lock_name.find_first (LOCK_NAME) == pfc_infinite)
                     return;
             }
 
             get_lock_manager ()->playlist_lock_toggle (active_playlist, p_index);
+            /*pm_api->playlist_activate_next ();
+            pm_api->playlist_activate_previous ();
+            pm_api->*/
         }
     };
 
