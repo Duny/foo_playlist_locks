@@ -46,19 +46,6 @@ class playlist_lock_impl_simple : public playlist_lock
 };
 
 
-// Data structure used by lock_manager for storing information about
-// locks installed on specified playlists
-// First parameters is playlist id, second is list of guids of
-// locks installed on this playlist
-typedef boost::tuple<t_size, pfc::list_t<GUID>> playlist_lock_data;
-
-FB2K_STREAM_READER_OVERLOAD(pfc::list_t<GUID>) { t_size n = 0; stream >> n; GUID g; while (n --> 0) { stream >> g; value.add_item (g); } return stream; }
-FB2K_STREAM_WRITER_OVERLOAD(pfc::list_t<GUID>) { t_size n = value.get_size (); stream << n; while (n --> 0) stream << value[n]; return stream; }
-
-FB2K_STREAM_READER_OVERLOAD(playlist_lock_data) { return read_tuple (stream, value); }
-FB2K_STREAM_WRITER_OVERLOAD(playlist_lock_data) { return write_tuple (stream, value); }
-
-
 // helper: does not register itself. provides empty implementation of playlist_callback members only 
 class playlist_callback_impl_simple : public playlist_callback {
 public:

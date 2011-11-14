@@ -82,9 +82,6 @@ namespace playlist_locks
             }
 
             get_lock_manager ()->playlist_lock_toggle (active_playlist, p_index);
-            /*pm_api->playlist_activate_next ();
-            pm_api->playlist_activate_previous ();
-            pm_api->*/
         }
     };
 

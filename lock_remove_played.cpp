@@ -2,7 +2,7 @@
 
 void remove_track_from_my_playlists(metadb_handle_ptr &p_track)
 {
-    if (!p_track.is_valid()) return;
+    /*if (!p_track.is_valid()) return;
     
     t_pm_v2 pm;
     int is_my;
@@ -19,7 +19,7 @@ void remove_track_from_my_playlists(metadb_handle_ptr &p_track)
 		        pfc::list_single_ref_t<metadb_handle_ptr>(p_track), mask))
 		        pm->playlist_remove_items(i, mask);
         }
-    }
+    }*/
 }
 
 

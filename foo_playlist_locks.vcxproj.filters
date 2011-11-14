@@ -18,9 +18,6 @@
     <ClCompile Include="foo_playlist_locks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="playlist_callback.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
