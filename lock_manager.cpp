@@ -76,54 +76,20 @@ namespace playlist_locks
         // playlist_callback implementation
         void on_playlist_created (t_size p_index, const char *p_name, t_size p_name_len) override
         {
-            insync (p_index);
-            //if (p_index 
-            // FIXME!!!!
+            insync (m_section);
+            m_data.add_item (playlist_lock_data ());
         }
 
         void on_playlists_reorder (const t_size * p_order, t_size p_count) override
         {
             insync (m_section);
-
-            /*for (t_size n = 0, data_size = m_data.get_size (); n < data_size; ++n) {
-                for (t_size i = 0; i < p_count; ++i) {
-                    if (m_data[n].m_playlist == i) {
-                        m_data[n].m_playlist = p_order[i];
-                        break;
-                    }
-                }
-            }*/
+            m_data.reorder (p_order);
         }
 
         void on_playlists_removed (const bit_array &p_mask, t_size p_old_count, t_size p_new_count)
         {
             insync (m_section);
-
-            //// FIXME!!!!
-            //m_data.sort_t ([] (const playlist_lock_data &one, const playlist_lock_data &two) -> int
-            //{
-            //        if (one.m_playlist < two.m_playlist) return -1;
-            //        else if (one.m_playlist > two.m_playlist) return 1;
-            //        else return 0;
-            //});
-            //console::formatter f;
-            //m_data.for_each ([&f] (const playlist_lock_data &p_data) { f << p_data.m_playlist << " "; });
-
-            //while (p_old_count --> 0) {
-            //    if (p_mask[p_old_count]) {
-            //        int i = m_data.get_size () - 1;
-            //        while (i --> 0) {
-            //            if (m_data[i].m_playlist > p_old_count)
-            //                m_data[i].m_playlist--;
-            //            else if (m_data[i].m_playlist == p_old_count) {
-            //                m_data.remove_by_idx (i);
-            //                break;
-            //            }
-            //            else
-            //                break;
-            //        }
-            //    }
-            //}
+            m_data.remove_mask (p_mask);
         }
 
         // lock_manager implementation
