@@ -30,7 +30,7 @@ namespace playlist_locks
         virtual void playlist_lock_toggle (t_size p_playlist, playlist_lock_special_ptr p_lock) = 0;
         inline void playlist_lock_toggle (t_size p_playlist, t_size p_index) { return playlist_lock_toggle (p_playlist, get_lock_type (p_index)); }
 
-        virtual bool playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special_ptr> &p_out) const = 0;
+        virtual void playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special_ptr> &p_out) const = 0;
         
 
         static void register_lock_type (playlist_lock_special *p_lock);
