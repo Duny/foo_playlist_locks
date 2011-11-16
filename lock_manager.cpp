@@ -152,6 +152,21 @@ namespace playlist_locks
             }
         }
 
+        void get_playlists (playlist_lock_special_ptr p_lock, pfc::list_base_t<t_size> &p_out) const
+        {
+            GUID guid = p_lock->get_guid ();
+            p_out.remove_all ();
+
+            insync (m_section);
+
+            auto n = m_data.get_size ();
+            while (n --> 0) {
+                auto index = m_data[n].m_guid_list.find_item (guid);
+                if (index != pfc_infinite)
+                    p_out.add_item (n);
+            }
+        }
+
         // helper functions
         inline playlist_lock_special * find_lock_ptr_by_guid (const GUID &p_guid) const
         {

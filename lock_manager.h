@@ -32,6 +32,9 @@ namespace playlist_locks
 
         virtual void playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special_ptr> &p_out) const = 0;
         
+        // returns list of playlists with installed p_lock
+        virtual void get_playlists (playlist_lock_special_ptr p_lock, pfc::list_base_t<t_size> &p_out) const = 0;
+
 
         static void register_lock_type (playlist_lock_special *p_lock);
     };
@@ -45,6 +48,8 @@ namespace playlist_locks
         playlist_lock_special_impl m_lock;
     public:
         register_playlist_lock_special_t () { lock_manager::register_lock_type (&m_lock); }
+
+        playlist_lock_special_ptr get_lock () const { return &m_lock; }
     };
 
 

@@ -8,24 +8,3 @@ And also it removes played tracks from the playlist.\n\n\
 
 VALIDATE_COMPONENT_FILENAME(COMPONENT_NAME".dll");
 
-bool get_playlist_remove_mask(
-	const pfc::list_base_const_t<metadb_handle_ptr> &p_playlist_items,
-	const pfc::list_base_const_t<metadb_handle_ptr> &p_items_to_remove,
-	pfc::bit_array_var_impl &p_out)
-{
-	bool result = false;
-	t_size n = p_items_to_remove.get_count(), 
-		   m = p_playlist_items.get_count();
-    for (t_size i = 0; i < n; i++)
-    {
-        for (t_size j = 0; j < m; j++)
-        {
-			if (p_playlist_items[j] == p_items_to_remove[i])
-			{
-                p_out.set(j);
-				result = true;
-			}
-        }
-    }
-	return result;
-}
