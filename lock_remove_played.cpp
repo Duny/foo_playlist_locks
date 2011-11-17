@@ -74,5 +74,5 @@ namespace playlist_locks
         GUID get_guid () const { return guid_inline<0x62f9cebd, 0x3327, 0x483a, 0xa7, 0xb7, 0x44, 0x7d, 0x35, 0xdc, 0x7f, 0x31>::guid; };
     };
 
-    static register_playlist_lock_special_t<remove_played> g_remove_played_lock;
+    //static register_playlist_lock_special_t<remove_played> g_remove_played_lock;
 }

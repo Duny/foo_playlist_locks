@@ -16,6 +16,15 @@ FB2K_STREAM_WRITER_OVERLOAD(playlist_lock_data) { return stream << value.m_guid_
 
 namespace playlist_locks
 {
+    playlist_lock_special::playlist_lock_special ()
+    {
+        lock_manager::register_lock_type (this);
+    }
+
+
+    //
+    // lock service implementation for internal use by lock_manager
+    //
     class lock_simple : public playlist_lock_impl_simple
     {
         // playlist_lock implementation
@@ -23,10 +32,12 @@ namespace playlist_locks
             pfc::string_formatter str = LOCK_NAME;
             auto playlist = static_api_ptr_t<playlist_manager>()->get_active_playlist ();
             if (playlist != pfc_infinite) {
+                // build a string containing comma separated names of all locks
+                // installed on active playlist
                 pfc::list_t<playlist_lock_special_ptr> playlist_locks;
-
                 static_api_ptr_t<lock_manager>()->playlist_get_locks (playlist, playlist_locks);
-                if (playlist_locks.get_count ()) {
+
+                if (playlist_locks.get_size ()) {
                     str << "(";
                     pfc::string8_fast lock_name;
                     playlist_locks.for_each ([&] (playlist_lock_special_ptr p_lock)
@@ -52,19 +63,12 @@ namespace playlist_locks
 
     void lock_manager::register_lock_type (playlist_lock_special *p_lock)
     {
-        GUID guid = p_lock->get_guid ();
         registered_locks_list &p_list = get_registered_locks_list ();
-        for (t_size i = 0, n = p_list.get_size (); i < n; ++i) {
-            if (p_list[i]->get_guid () == guid)
-                return;
-        }
-
         p_list.add_item (p_lock);
     }
 
     class lock_manager_impl : public lock_manager, public playlist_callback_impl_simple
     {
-        
         // Member variables
         //
         static cfg_objList<playlist_lock_data> m_data;
@@ -74,6 +78,7 @@ namespace playlist_locks
 
 
         // playlist_callback implementation
+        //
         void on_playlist_created (t_size p_index, const char *p_name, t_size p_name_len) override
         {
             insync (m_section);
@@ -94,8 +99,6 @@ namespace playlist_locks
 
         // lock_manager implementation
         //
-        const service_ptr_t<playlist_lock>& get_foobar2000_lock () const override { return m_lock; }
-
         t_size get_lock_type_count () const override { return get_registered_locks_list ().get_count (); }
 
         // no boundary check
@@ -104,10 +107,7 @@ namespace playlist_locks
         bool playlist_has_lock (t_size p_playlist, playlist_lock_special_ptr p_lock) const override
         {
             insync (m_section);
-
-            if (p_playlist < m_data.get_size ())
-                return m_data[p_playlist].m_guid_list.find_item (p_lock->get_guid ()) != pfc_infinite;
-
+            if (p_playlist < m_data.get_size ()) return m_data[p_playlist].m_guid_list.find_item (p_lock->get_guid ()) != pfc_infinite;
             return false;
         }
 
@@ -132,7 +132,7 @@ namespace playlist_locks
                     }
                 }
 
-                // make foobar2000 call lock_simple->get_lock_name () for statusbar update
+                // make foobar2000 update statusbar
                 api->playlist_lock_uninstall (p_playlist, m_lock);
                 api->playlist_lock_install (p_playlist, m_lock);
             }
@@ -146,7 +146,7 @@ namespace playlist_locks
 
             if (p_playlist < m_data.get_size ()) {   
                 for (t_size i = 0, n = m_data[p_playlist].m_guid_list.get_size (); i < n; ++i) {                    ;
-                    if (playlist_lock_special_ptr lock_ptr = find_lock_ptr_by_guid (m_data[p_playlist].m_guid_list[i]))
+                    if (auto lock_ptr = find_lock_ptr_by_guid (m_data[p_playlist].m_guid_list[i]))
                         p_out.add_item (lock_ptr);
                 }
             }
@@ -194,11 +194,11 @@ namespace playlist_locks
             if (data_size > playlist_count)
                 m_data.truncate (playlist_count);
             else if (data_size < playlist_count)
-                for (; data_size < playlist_count; ++data_size) m_data.add_item (playlist_lock_data ());
+                while (data_size < playlist_count) m_data.add_item (playlist_lock_data ()), data_size++;
 
-            for (t_size i = 0; i < data_size; ++i) {
-                if (m_data[i].m_guid_list.get_size () && !api->playlist_lock_is_present (i))
-                    api->playlist_lock_install (i, m_lock);
+            while (data_size --> 0) {
+                if (m_data[data_size].m_guid_list.get_size () && !api->playlist_lock_is_present (data_size))
+                    api->playlist_lock_install (data_size, m_lock);
             }
         }
 
