@@ -48,7 +48,6 @@ class playlist_lock_impl_simple : public playlist_lock
 
 // helper: does not register itself. provides empty implementation of playlist_callback members only 
 class playlist_callback_impl_simple : public playlist_callback {
-public:
     void on_items_added (t_size, t_size, const pfc::list_base_const_t<metadb_handle_ptr>&, const bit_array&) override {}
     void on_items_reordered (t_size, const t_size*, t_size) override {}
     void on_items_removing (t_size, const bit_array&, t_size, t_size) override {}
@@ -74,4 +73,43 @@ public:
     void on_playback_order_changed (t_size) override {}
     void on_playlist_locked (t_size, bool) override {}
 };
+
+
+// Empty library_callback_dynamic implementation
+class library_callback_impl_simple : public library_callback_dynamic {
+    void on_items_added (const pfc::list_base_const_t<metadb_handle_ptr>&) override {}
+    void on_items_removed (const pfc::list_base_const_t<metadb_handle_ptr>&) override {}
+    void on_items_modified (const pfc::list_base_const_t<metadb_handle_ptr>&) override {}
+};
+
+
+// Empty play_callback_static implementation
+class play_callback_static_impl_simple : public play_callback_static
+{
+    unsigned get_flags () override { return 0; }
+    void on_playback_new_track (metadb_handle_ptr p_track) override {}
+    void on_playback_stop (play_control::t_stop_reason p_reason) {}
+    void on_playback_starting (play_control::t_track_command p_command, bool p_paused) override {}
+    void on_playback_seek (double p_time) override {}
+    void on_playback_pause (bool p_state) override {}
+    void on_playback_edited (metadb_handle_ptr p_track) override {}
+    void on_playback_dynamic_info (const file_info & p_info) override {}
+    void on_playback_dynamic_info_track (const file_info & p_info) override {}
+    void on_playback_time (double p_time) override {}
+    void on_volume_change (float p_new_val) override {}
+};
+
+// helper: wraps main_thread_callback
+template <typename Func>
+void run_from_main_thread (Func f)
+{
+    struct from_main_thread : main_thread_callback
+    {
+        void callback_run () override { f (); }
+        from_main_thread (Func f) : f (f) {}
+        Func f;
+    };
+
+    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<from_main_thread> (f));
+}
 #endif

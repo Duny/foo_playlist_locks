@@ -2,7 +2,7 @@
 
 namespace playlist_locks
 {
-    class media_library_tracker : public library_callback_dynamic, public playlist_lock_special
+    class media_library_tracker : public library_callback_impl_simple, public playlist_lock_special
     {
         //
         // playlist_lock_special overrides
@@ -42,9 +42,6 @@ namespace playlist_locks
                 api->playlist_remove_items (playlists[n], remove_mask);
             }
         }
-
-        // not used
-        void on_items_modified (const pfc::list_base_const_t<metadb_handle_ptr> & p_data) override {}
 
         // helpers
         void get_remove_mask (

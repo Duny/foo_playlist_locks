@@ -142,7 +142,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="foo_playlist_locks.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="lock_manager.h" />
     <ClInclude Include="stdafx.h" />

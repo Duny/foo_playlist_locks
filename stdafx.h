@@ -10,5 +10,4 @@
 #include "boost/tuple/tuple.hpp"
 
 #include "helpers.h"
-#include "foo_playlist_locks.h"
 #include "lock_manager.h"
