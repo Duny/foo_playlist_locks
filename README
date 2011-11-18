@@ -1,4 +1,10 @@
-This is a foobar2000 component, providing playlist locks for tracking media library changes and for automaticaly removing played songs.
+This component provides several playlist locks. Each lock somehow filters/modifies playlist content.
+Unlike autoplaylist, playlist lock allows you to modify content manually.
+Provided locks:
+1.Media Library changes tracker
+-  Inserts new medial library items or removes deleted items.
+2.Remove played
+-  Automatically removes all instances of played song.
 
 Building
 In order to build, you will need to define some environment variables:

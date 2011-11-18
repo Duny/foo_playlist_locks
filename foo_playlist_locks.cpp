@@ -1,10 +1,14 @@
 #include "stdafx.h"
 
-DECLARE_COMPONENT_VERSION(COMPONENT_NAME, "0.2",
-"A component, that manages locked playlist. It feels playlist with music, \
-coming into Media Library, also it removes music, removed from Media Library.\n\
-And also it removes played tracks from the playlist.\n\n\
-(c) 2010 Duny (majorquake3@gmail.com)");
+DECLARE_COMPONENT_VERSION("Playlist Locks", "1.0.0",
+"This component provides several playlist locks. Each lock somehow filters/modifies playlist contents. \
+Unlike autoplaylist, playlist lock allows you to modify content manually.\
+Locks are installed/uninstalled through the \"Edit->Playlist locks\" menu. Locks are stackable.\n\n\
+Provided locks:\n\
+1.Media Library changes tracker\n\
+-  Inserts new medial library items or removes deleted items.\n\
+2.Remove played\n\
+-  Automatically removes all instances of played song.\n\n\
+(c) 2010-2011 Duny <majorquake3@gmail.com>");
 
 VALIDATE_COMPONENT_FILENAME(COMPONENT_NAME".dll");
-

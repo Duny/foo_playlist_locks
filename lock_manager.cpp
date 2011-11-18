@@ -1,27 +1,16 @@
 #include "stdafx.h"
 
-//
-// for storing plugin configuration
-struct playlist_lock_data
-{
-    pfc::list_t<GUID> m_guid_list; // list of GUID's of all locks installed on playlist
-};
-
 FB2K_STREAM_READER_OVERLOAD(pfc::list_t<GUID>) { t_size n = 0; stream >> n; GUID g; while (n --> 0) { stream >> g; value.add_item (g); } return stream; }
 FB2K_STREAM_WRITER_OVERLOAD(pfc::list_t<GUID>) { t_size n = value.get_size (); stream << n; while (n --> 0) stream << value[n]; return stream; }
 
-FB2K_STREAM_READER_OVERLOAD(playlist_lock_data) { return stream >> value.m_guid_list; }
-FB2K_STREAM_WRITER_OVERLOAD(playlist_lock_data) { return stream << value.m_guid_list; }
-
-
 namespace playlist_locks
 {
-    playlist_lock_special::playlist_lock_special ()
-    {
-        lock_manager::register_lock_type (this);
-    }
+    // lock_manager class guid
+    const GUID lock_manager::class_guid = { 0xe2b169ec, 0x196d, 0x4fbc, { 0xa1, 0xbb, 0x6f, 0xfd, 0x5b, 0xa6, 0xdd, 0xac } };
 
-
+    // array of all registered lock types
+    namespace { lock_ñptr g_lock_types[LOCK_COUNT]; static t_uint32 g_num_locks = 0; }
+    
     //
     // lock service implementation for internal use by lock_manager
     //
@@ -29,49 +18,26 @@ namespace playlist_locks
     {
         // playlist_lock implementation
         void get_lock_name (pfc::string_base &p_out) override { 
-            pfc::string_formatter str = LOCK_NAME;
-            auto playlist = static_api_ptr_t<playlist_manager>()->get_active_playlist ();
-            if (playlist != pfc_infinite) {
-                // build a string containing comma separated names of all locks
-                // installed on active playlist
-                pfc::list_t<playlist_lock_special_ptr> playlist_locks;
-                static_api_ptr_t<lock_manager>()->playlist_get_locks (playlist, playlist_locks);
+            p_out = LOCK_NAME;
 
-                if (playlist_locks.get_size ()) {
-                    str << "(";
-                    pfc::string8_fast lock_name;
-                    playlist_locks.for_each ([&] (playlist_lock_special_ptr p_lock)
-                    {
-                        p_lock->get_lock_name (lock_name);
-                        str << lock_name << ",";
-                    });
-                    str.replace_char (',', ')', str.length () - 1);
-                }
-            }
-            p_out.set_string (str); 
+            pfc::string8_fast locks;
+            if (static_api_ptr_t<lock_manager>()->activeplaylist_get_lock_names (locks))
+                p_out << ": " << locks;
         }
     };
 
 
-    typedef pfc::list_t<playlist_lock_special*> registered_locks_list;
-
-    static registered_locks_list& get_registered_locks_list ()
+    void lock_manager::register_lock_type (lock_ñptr p_lock)
     {
-        static registered_locks_list list;
-        return list;
-    }
-
-    void lock_manager::register_lock_type (playlist_lock_special *p_lock)
-    {
-        registered_locks_list &p_list = get_registered_locks_list ();
-        p_list.add_item (p_lock);
+        g_lock_types[g_num_locks++] = p_lock;
     }
 
     class lock_manager_impl : public lock_manager, public playlist_callback_impl_simple
     {
         // Member variables
-        //
-        static cfg_objList<playlist_lock_data> m_data;
+        
+        // We store array of lists of locks guids installed on each playlist
+        static cfg_objList<pfc::list_t<GUID>> m_data;
         mutable critical_section m_section; // synchronization for accessing m_data
 
         service_ptr_t<playlist_lock> m_lock; // instance of playlist_lock for install/uninstall on playlists
@@ -82,16 +48,16 @@ namespace playlist_locks
         void on_playlist_created (t_size p_index, const char *p_name, t_size p_name_len) override
         {
             insync (m_section);
-            m_data.add_item (playlist_lock_data ());
+            m_data.add_item (pfc::list_t<GUID> ());
         }
 
-        void on_playlists_reorder (const t_size * p_order, t_size p_count) override
+        void on_playlists_reorder (const t_size *p_order, t_size p_count) override
         {
             insync (m_section);
             m_data.reorder (p_order);
         }
 
-        void on_playlists_removed (const bit_array &p_mask, t_size p_old_count, t_size p_new_count)
+        void on_playlists_removed (const bit_array &p_mask, t_size p_old_count, t_size p_new_count) override
         {
             insync (m_section);
             m_data.remove_mask (p_mask);
@@ -99,60 +65,59 @@ namespace playlist_locks
 
         // lock_manager implementation
         //
-        t_size get_lock_type_count () const override { return get_registered_locks_list ().get_count (); }
 
         // no boundary check
-        playlist_lock_special_ptr get_lock_type (t_size p_index) const override { return get_registered_locks_list()[p_index]; }
+        lock_ñptr get_lock_type (t_size p_index) const override { return g_lock_types[p_index]; }
 
-        bool playlist_has_lock (t_size p_playlist, playlist_lock_special_ptr p_lock) const override
+        bool playlist_has_lock (t_size p_playlist, t_size p_lock) const override
         {
             insync (m_section);
-            if (p_playlist < m_data.get_size ()) return m_data[p_playlist].m_guid_list.find_item (p_lock->get_guid ()) != pfc_infinite;
-            return false;
+            return m_data[p_playlist].have_item (get_lock_type (p_lock)->get_guid ());
         }
 
-        void playlist_lock_toggle (t_size p_playlist, playlist_lock_special_ptr p_lock) override
+        void activeplaylist_lock_toggle (t_size p_lock) override
         {
             insync (m_section);
 
             static_api_ptr_t<playlist_manager> api;
-
-            // get guid of the requested lock type
-            auto lock_guid = p_lock->get_guid ();
+            auto guid = get_lock_type (p_lock)->get_guid ();
+            auto playlist = api->get_active_playlist ();
             
-            if (p_playlist < m_data.get_size ()) {
-                auto guid_index = m_data[p_playlist].m_guid_list.find_item (lock_guid);
-                if (guid_index == pfc_infinite) // add lock to list
-                    m_data[p_playlist].m_guid_list.add_item (lock_guid);
-                else { // remove lock type from list
-                    m_data[p_playlist].m_guid_list.remove_by_idx (guid_index);
-                    if (m_data[p_playlist].m_guid_list.get_size () == 0) { // all lock types were removed => uninstall lock from playlist
-                        api->playlist_lock_uninstall (p_playlist, m_lock);
+            if (!static_api_ptr_t<autoplaylist_manager>()->is_client_present (playlist)) {
+                auto guid_index = m_data[playlist].find_item (guid);
+                if (guid_index == pfc_infinite) // add lock 
+                    m_data[playlist].add_item (guid);
+                else { // remove lock
+                    m_data[playlist].remove_by_idx (guid_index);
+                    if (m_data[playlist].get_size () == 0) { // all lock types were removed => uninstall lock from playlist
+                        api->playlist_lock_uninstall (playlist, m_lock);
                         return;
                     }
                 }
 
                 // make foobar2000 update statusbar
-                api->playlist_lock_uninstall (p_playlist, m_lock);
-                api->playlist_lock_install (p_playlist, m_lock);
+                api->playlist_lock_uninstall (playlist, m_lock);
+                api->playlist_lock_install (playlist, m_lock);
             }
         }
-
-        void playlist_get_locks (t_size p_playlist, pfc::list_base_t<playlist_lock_special_ptr> &p_out) const override
+        
+        bool activeplaylist_get_lock_names (pfc::string_base &p_out) const override
         {
-            p_out.remove_all ();
+            p_out.reset ();
 
-            insync (m_section);
-
-            if (p_playlist < m_data.get_size ()) {   
-                for (t_size i = 0, n = m_data[p_playlist].m_guid_list.get_size (); i < n; ++i) {                    ;
-                    if (auto lock_ptr = find_lock_ptr_by_guid (m_data[p_playlist].m_guid_list[i]))
-                        p_out.add_item (lock_ptr);
+            t_size playlist = static_api_ptr_t<playlist_manager>()->get_active_playlist ();
+            if (playlist != pfc_infinite) {
+                m_data[playlist].for_each ([&] (const GUID &guid) { p_out << find_lock_by_guid (guid)->get_lock_name () << ", "; });
+                if (!p_out.is_empty ()) {
+                    p_out.truncate (p_out.length () - 2);
+                    return true;
                 }
             }
+            return false;
         }
 
-        void get_playlists (playlist_lock_special_ptr p_lock, pfc::list_base_t<t_size> &p_out) const
+
+        void get_playlists (lock_ñptr p_lock, pfc::list_base_t<t_size> &p_out) const override
         {
             GUID guid = p_lock->get_guid ();
             p_out.remove_all ();
@@ -160,63 +125,60 @@ namespace playlist_locks
             insync (m_section);
 
             auto n = m_data.get_size ();
-            while (n --> 0) {
-                auto index = m_data[n].m_guid_list.find_item (guid);
-                if (index != pfc_infinite)
+            while (n --> 0)
+                if (m_data[n].have_item (guid))
                     p_out.add_item (n);
-            }
         }
 
+
         // helper functions
-        inline playlist_lock_special * find_lock_ptr_by_guid (const GUID &p_guid) const
+        inline lock_ñptr find_lock_by_guid (const GUID &p_guid) const
         {
-            const registered_locks_list& p_list = get_registered_locks_list ();
-            for (t_size i = 0, n = p_list.get_size (); i < n; ++i) {
-                if (p_list[i]->get_guid () == p_guid)
-                    return p_list[i];
-            }
+            auto n = LOCK_COUNT;
+            while (n --> 0)
+                if (g_lock_types[n]->get_guid () == p_guid)
+                    return g_lock_types[n];
+
+            // shouldn't get here..
             return nullptr;
         }
 
-   public:
-       lock_manager_impl () : m_lock (new service_impl_t<lock_simple>()) {}
+    public:
+        lock_manager_impl () : m_lock (new service_impl_t<lock_simple>()) {}
 
         void on_init ()
         {
-            static_api_ptr_t<playlist_manager>()->register_callback (this, flag_on_playlists_reorder | flag_on_playlists_removed | flag_on_playlist_created);
+            PFC_ASSERT (g_num_locks == LOCK_COUNT);
 
             static_api_ptr_t<playlist_manager> api;
-            auto playlist_count = api->get_playlist_count ();
+            api->register_callback (this, flag_on_playlists_reorder | flag_on_playlists_removed | flag_on_playlist_created);
 
             insync (m_section);
                         
-            auto data_size = m_data.get_size ();
-            if (data_size > playlist_count)
-                m_data.truncate (playlist_count);
-            else if (data_size < playlist_count)
-                while (data_size < playlist_count) m_data.add_item (playlist_lock_data ()), data_size++;
-
-            while (data_size --> 0) {
-                if (m_data[data_size].m_guid_list.get_size () && !api->playlist_lock_is_present (data_size))
-                    api->playlist_lock_install (data_size, m_lock);
+            auto n = m_data.get_size (), playlist_count = api->get_playlist_count ();;
+            if (n != playlist_count) {
+                m_data.set_size (playlist_count);
+                n = playlist_count;
             }
+
+            while (n --> 0)
+                if (m_data[n].get_size () && !api->playlist_lock_install (n, m_lock))
+                    m_data[n].remove_all ();
         }
 
-        void on_quit ()
-        {
-            static_api_ptr_t<playlist_manager>()->unregister_callback (this);
-        }
+        void on_quit () { static_api_ptr_t<playlist_manager>()->unregister_callback (this); }
     };
-    cfg_objList<playlist_lock_data> lock_manager_impl::m_data (guid_inline<0x478572b6, 0x7828, 0x47e6, 0x8f, 0x38, 0xe1, 0xfb, 0x70, 0xa, 0x99, 0x93>::guid);
 
-    static service_factory_single_t<lock_manager_impl> g_locks_manager_factory;
+    cfg_objList<pfc::list_t<GUID>> lock_manager_impl::m_data (guid_inline<0x478572b6, 0x7828, 0x47e6, 0x8f, 0x38, 0xe1, 0xfb, 0x70, 0xa, 0x99, 0x93>::guid);
+        
 
     namespace {
-        class playlist_locks_initializer : public initquit
+        service_factory_single_t<lock_manager_impl> g_factory;
+        class lock_manager_initializer : public initquit
         {
-            void on_init () override { g_locks_manager_factory.get_static_instance ().on_init (); }
-            void on_quit () override { g_locks_manager_factory.get_static_instance ().on_quit (); }
+            void on_init () override { g_factory.get_static_instance ().on_init (); }
+            void on_quit () override { g_factory.get_static_instance ().on_quit (); }
         };
-        static initquit_factory_t<playlist_locks_initializer> g_initializer;
+        static initquit_factory_t<lock_manager_initializer> g_initializer;
     }
 }
