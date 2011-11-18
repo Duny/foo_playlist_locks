@@ -2,51 +2,51 @@
 
 namespace playlist_locks
 {
-
-void remove_track_from_my_playlists(metadb_handle_ptr &p_track)
-{
-    /*if (!p_track.is_valid()) return;
-    
-    t_pm_v2 pm;
-    int is_my;
-    for (t_size i = 0, n = pm->get_playlist_count(); i < n; i++)
+    struct remove_item_thread : main_thread_callback
     {
-        if (pm->playlist_get_property_int(i, my_playlist_property, is_my) 
-            && is_my == 1) 
+        metadb_handle_ptr m_item;
+        playlist_lock_special_ptr m_lock;
+
+        void callback_run () override
         {
-	        metadb_handle_list items;
-	        pm->playlist_get_all_items (i, items);
-
-	        pfc::bit_array_var_impl mask;
-	        if (get_playlist_remove_mask(items,
-		        pfc::list_single_ref_t<metadb_handle_ptr>(p_track), mask))
-		        pm->playlist_remove_items(i, mask);
+            remove_track_from_playlists (m_item, m_lock);
         }
-    }*/
-}
 
+        void get_remove_mask (
+            const pfc::list_base_const_t<metadb_handle_ptr> &p_playlist_items,
+            const metadb_handle_ptr &p_item,
+            pfc::bit_array_var_impl &p_out)
+        {
+            auto total_items = p_playlist_items.get_size ();
+            while (total_items --> 0)
+                if (p_item == p_playlist_items[total_items])
+                    p_out.set (total_items);
+        }
 
-class remove_track_process_callback : public threaded_process_callback
-{
-    metadb_handle_ptr m_handle;
+        void remove_track_from_playlists (const metadb_handle_ptr &p_item, playlist_lock_special_ptr p_lock)
+        {
+            pfc::list_t<t_size> playlists;
+            static_api_ptr_t<lock_manager>()->get_playlists (p_lock, playlists);
 
-public:
-    remove_track_process_callback(metadb_handle_ptr p_handle) : m_handle(p_handle) {}
+            static_api_ptr_t<playlist_manager> api;
+            auto n = playlists.get_size ();
+            while (n --> 0) {
+                metadb_handle_list playlist_items;
+                api->playlist_get_all_items (playlists[n], playlist_items);
 
-	virtual void on_init(HWND p_wnd) {}
-    virtual void run(threaded_process_status & p_status,abort_callback & p_abort) 
-    {
-        Sleep (100);
-    }
-	virtual void on_done(HWND p_wnd,bool p_was_aborted)
-    {
-        remove_track_from_my_playlists(m_handle);
-    }
-};
+                pfc::bit_array_var_impl remove_mask;
+                get_remove_mask (playlist_items, p_item, remove_mask);
+
+                api->playlist_remove_items (playlists[n], remove_mask);
+            }
+        }
+
+        remove_item_thread (const metadb_handle_ptr &p_item, playlist_lock_special_ptr p_lock) : m_item (p_item), m_lock (p_lock) {}
+    };
 
     class remove_played : public play_callback_static_impl_simple, public playlist_lock_special
     {
-        metadb_handle_ptr m_prev_track_played;
+        metadb_handle_ptr m_previous_track;
 
         //
         // playlist_lock_special overrides
@@ -62,29 +62,27 @@ public:
 
         void on_playback_new_track (metadb_handle_ptr p_track) override
         {
-            if (m_prev_track_played.is_valid())
-            {
-                service_ptr_t<threaded_process_callback> thread = 
-                    new service_impl_t<remove_track_process_callback>(m_prev_track_played);
-                threaded_process::g_run_modeless( 
-                    thread,
-                    threaded_process::flag_show_delayed,
-                    core_api::get_main_window(),
-                    "Removing track from my autoplaylist...");
-            }
-            m_prev_track_played = p_track;
+            if (m_previous_track.is_valid () && m_previous_track != p_track)
+                static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<remove_item_thread> (m_previous_track, this));
+                
+            m_previous_track = p_track;
         }
 
         void on_playback_stop (play_control::t_stop_reason p_reason) 
         {
-            if (p_reason == play_control::stop_reason_eof ||
-                p_reason == play_control::stop_reason_starting_another)
-                remove_track_from_my_playlists(m_prev_track_played);
-
-            m_prev_track_played.detach();
+            // handle case of last track in playlist
+            if (p_reason == play_control::stop_reason_eof) {
+                static_api_ptr_t<playlist_manager> api;
+                t_size playing_playlist = api->get_playing_playlist ();
+                if (playing_playlist != pfc_infinite && api->playlist_get_item_count (playing_playlist) == 1)
+                    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<remove_item_thread> (m_previous_track, this));
+            }
+            else if (p_reason == play_control::stop_reason_user)
+                m_previous_track.detach ();
         }
+
     public:
-        ~remove_played() { m_prev_track_played.detach(); }
+        ~remove_played () { m_previous_track.detach (); }
     };
 
     static play_callback_static_factory_t<remove_played> g_remove_played_lock;
