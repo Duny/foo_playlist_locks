@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-DECLARE_COMPONENT_VERSION("Playlist Locks", "1.0.0",
+DECLARE_COMPONENT_VERSION("Playlist Locks", "1.0.1",
 "This component provides several playlist locks. Each lock somehow filters/modifies playlist contents. \
 Unlike autoplaylist, playlist lock allows you to modify content manually.\
 Locks are installed/uninstalled through the \"Edit->Playlist locks\" menu. Locks are stackable.\n\n\

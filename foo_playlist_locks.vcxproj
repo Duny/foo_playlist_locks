@@ -98,7 +98,7 @@
       <Path>$(IntDir)BuildLog.htm</Path>
     </BuildLog>
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>MinSpace</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_PLAYLIST_LOCK_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -112,6 +112,7 @@
       </DebugInformationFormat>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
