@@ -69,16 +69,16 @@ class play_callback_static_impl_simple : public play_callback_static
 };
 
 // helper: wraps main_thread_callback
-//template <typename Func>
-//void run_from_main_thread (Func f)
-//{
-//    struct from_main_thread : main_thread_callback
-//    {
-//        void callback_run () override { f (); }
-//        from_main_thread (Func f) : f (f) {}
-//        Func f;
-//    };
-//
-//    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<from_main_thread> (f));
-//}
+template <typename Func>
+void run_from_main_thread (Func f)
+{
+    struct from_main_thread : main_thread_callback
+    {
+        void callback_run () override { f (); }
+        from_main_thread (Func f) : f (f) {}
+        Func f;
+    };
+
+    static_api_ptr_t<main_thread_callback_manager>()->add_callback (new service_impl_t<from_main_thread> (f));
+}
 #endif

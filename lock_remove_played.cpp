@@ -36,9 +36,6 @@ namespace playlist_locks
 
     class remove_played : public play_callback_static_impl_simple, public lock_t
     {
-        metadb_handle_ptr m_previous_track;
-
-        //
         // playlist_lock_special overrides
         //
         const char* get_lock_name () const override { return "Remove played"; }
@@ -53,8 +50,16 @@ namespace playlist_locks
 
         void on_playback_new_track (metadb_handle_ptr p_track) override
         {
-            if (m_previous_track.is_valid () && m_previous_track != p_track)
-                main_thread_callback_spawn<remove_item_thread> (m_previous_track, this);
+            if (m_previous_track.is_valid ()) {
+                if (m_previous_track != p_track)
+                    remove_previous ();
+                // Handle case of repeating last item in playlist
+                // (on_playback_stop is not called in this case)
+                else if (m_previous_track == p_track && playing_pls_item_count () == 1) {
+                    remove_previous ();
+                    run_from_main_thread ([] () { static_api_ptr_t<playback_control>()->stop (); });
+                }
+            }
 
             m_previous_track = p_track;
         }
@@ -62,15 +67,24 @@ namespace playlist_locks
         void on_playback_stop (play_control::t_stop_reason p_reason) override
         {
             // handle case of last track in playlist
-            if (p_reason == play_control::stop_reason_eof) {
-                static_api_ptr_t<playlist_manager> api;
-                auto playing_playlist = api->get_playing_playlist ();
-                if (playing_playlist != pfc_infinite && api->playlist_get_item_count (playing_playlist) == 1)
-                    main_thread_callback_spawn<remove_item_thread> (m_previous_track, this);
-            }
+            if (p_reason == play_control::stop_reason_eof && playing_pls_item_count () == 1)
+                remove_previous ();
             else if (p_reason == play_control::stop_reason_user)
                 m_previous_track.detach ();
         }
+
+        // Helpers
+        inline t_size playing_pls_item_count () const
+        {
+            static_api_ptr_t<playlist_manager> api;
+            auto playing_playlist = api->get_playing_playlist ();
+            return api->playlist_get_item_count (playing_playlist);
+        }
+
+        inline void remove_previous () { main_thread_callback_spawn<remove_item_thread> (m_previous_track, this); }
+
+        // Member variables
+        metadb_handle_ptr m_previous_track;
 
     public:
         ~remove_played () { m_previous_track.detach (); }
