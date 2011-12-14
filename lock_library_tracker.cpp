@@ -5,7 +5,7 @@ namespace playlist_locks
     class media_library_tracker : public library_callback_dynamic, public lock_t
     {
         //
-        // playlist_lock_special overrides
+        // lock_t overrides
         //
         const char* get_lock_name () const override { return "ML changes tracker"; }
         GUID get_guid () const override { return guid_inline<0xe33d9a0c, 0xdec1, 0x493f, 0x9c, 0xa7, 0x81, 0x35, 0x73, 0x38, 0x16, 0x78>::guid; };

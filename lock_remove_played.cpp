@@ -36,7 +36,7 @@ namespace playlist_locks
 
     class remove_played : public play_callback_static_impl_simple, public lock_t
     {
-        // playlist_lock_special overrides
+        // lock_t overrides
         //
         const char* get_lock_name () const override { return "Remove played"; }
 
