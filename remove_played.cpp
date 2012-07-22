@@ -5,12 +5,12 @@ namespace playlist_locks
     class remove_item_thread : public main_thread_callback
     {
         metadb_handle_ptr m_item;
-        lock_ñptr m_lock;
+        const GUID m_lock;
 
         void callback_run () override
         {
             static_api_ptr_t<playlist_manager> api;
-            static_api_ptr_t<lock_manager>()->for_each_playlist (m_lock, [&] (t_size playlist) 
+            for_each_playlist (m_lock, [&] (t_size playlist) 
             {
                 metadb_handle_list playlist_items;
                 api->playlist_get_all_items (playlist, playlist_items);
@@ -31,17 +31,28 @@ namespace playlist_locks
         }
 
     public:
-        remove_item_thread (const metadb_handle_ptr &p_item, lock_ñptr p_lock) : m_item (p_item), m_lock (p_lock) {}
+        remove_item_thread (const metadb_handle_ptr &p_item, const GUID & p_guid_lock) : m_item (p_item), m_lock (p_guid_lock) {}
     };
+
+
 
     class remove_played : public play_callback_static_impl_simple, public lock_t
     {
         // lock_t overrides
-        //
-        const char* get_lock_name () const override { return "Remove played"; }
+        const char * get_name () const override
+        {
+            return "Remove played";
+        }
 
-        GUID get_guid () const override { return guid_inline<0x62f9cebd, 0x3327, 0x483a, 0xa7, 0xb7, 0x44, 0x7d, 0x35, 0xdc, 0x7f, 0x31>::guid; };
+        GUID get_guid () const override
+        {
+            return create_guid (0x62f9cebd, 0x3327, 0x483a, 0xa7, 0xb7, 0x44, 0x7d, 0x35, 0xdc, 0x7f, 0x31);
+        }
 
+        bool is_exclusive () const override
+        {
+            return false;
+        }
 
         //
         // play_callback overrides
@@ -67,7 +78,7 @@ namespace playlist_locks
         void on_playback_stop (play_control::t_stop_reason p_reason) override
         {
             // handle case of last track in playlist
-            if (p_reason == play_control::stop_reason_eof && playing_pls_item_count () == 1)
+            if (p_reason == play_control::stop_reason_eof && playing_pls_item_count () != 0)
                 remove_previous ();
             else if (p_reason == play_control::stop_reason_user)
                 m_previous_track.detach ();
@@ -81,7 +92,7 @@ namespace playlist_locks
             return api->playlist_get_item_count (playing_playlist);
         }
 
-        inline void remove_previous () { main_thread_callback_spawn<remove_item_thread> (m_previous_track, this); }
+        inline void remove_previous () { main_thread_callback_spawn<remove_item_thread> (m_previous_track, this->get_guid ()); }
 
         // Member variables
         metadb_handle_ptr m_previous_track;

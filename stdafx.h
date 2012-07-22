@@ -3,17 +3,19 @@
 
 
 #define COMPONENT_NAME "foo_playlist_locks"
-#define LOCK_NAME "Playlist Locks"
 
-// Don't forget to change this when adding/removing lock type
-#define LOCK_COUNT 2
-
+// crt includes
+#include <tuple>
+#include <functional>
+#include <algorithm>
 
 // foobar2000 includes
-#include "foobar2000/SDK/foobar2000.h"
+#include "foobar2000/ATLHelpers/ATLHelpers.h"
+#include <exdispid.h>
+#include <atlframe.h>
 
-// Boost includes
-#include "boost/function.hpp"
+// vk_com_api includes
+#include "vk_com_api.h"
 
 #include "helpers.h"
 #include "lock_manager.h"

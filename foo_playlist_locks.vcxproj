@@ -64,7 +64,7 @@
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);$(JSONCPP)\include\;$(FB2K_VK_COM_API);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;FOO_playlist_locks_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -72,6 +72,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalOptions>-Zm113 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FB2KSDK)\foobar2000\shared\shared.lib;shlwapi.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -100,7 +101,7 @@
     <ClCompile>
       <Optimization>MinSpace</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(BOOST);$(JSONCPP)\include\;$(FB2K_VK_COM_API);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_PLAYLIST_LOCK_EXPORTS;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -136,21 +137,46 @@
     </ManifestResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="foo_playlist_locks.cpp" />
-    <ClCompile Include="lock_library_tracker.cpp" />
+    <ClCompile Include="library_tracker.cpp" />
     <ClCompile Include="lock_manager.cpp" />
     <ClCompile Include="main_menu.cpp" />
-    <ClCompile Include="lock_remove_played.cpp" />
+    <ClCompile Include="remove_played.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.cpp" />
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_methods.cpp" />
+    <ClCompile Include="vk_music.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />
     <ClInclude Include="lock_manager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_external.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_methods.h" />
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(FB2KSDK)\foobar2000\foobar2000_component_client\foobar2000_component_client.vcxproj">
@@ -172,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_playlist_locks.rc" />
+    <ResourceCompile Include="$(FB2K_VK_COM_API)\vk_com_api_resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

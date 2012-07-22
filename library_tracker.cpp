@@ -4,12 +4,21 @@ namespace playlist_locks
 {
     class media_library_tracker : public library_callback_dynamic, public lock_t
     {
-        //
         // lock_t overrides
-        //
-        const char* get_lock_name () const override { return "ML changes tracker"; }
-        GUID get_guid () const override { return guid_inline<0xe33d9a0c, 0xdec1, 0x493f, 0x9c, 0xa7, 0x81, 0x35, 0x73, 0x38, 0x16, 0x78>::guid; };
+        const char * get_name () const override
+        {
+            return "ML changes tracker";
+        }
 
+        GUID get_guid () const override
+        {
+            return create_guid (0xe33d9a0c, 0xdec1, 0x493f, 0x9c, 0xa7, 0x81, 0x35, 0x73, 0x38, 0x16, 0x78);
+        }
+
+        bool is_exclusive () const override
+        {
+            return false;
+        }
 
         //
         // library_callback_dynamic overrides
@@ -17,14 +26,13 @@ namespace playlist_locks
         void on_items_added (const pfc::list_base_const_t<metadb_handle_ptr> & p_data) override
         {
             static_api_ptr_t<playlist_manager> api;
-            static_api_ptr_t<lock_manager>()->for_each_playlist (this, [&] (t_size playlist) 
-            { api->playlist_add_items (playlist, p_data, bit_array_false ()); });
+            for_each_playlist (this->get_guid (), [&] (t_size playlist) { api->playlist_add_items (playlist, p_data, bit_array_false ()); });
         }
 
         void on_items_removed (const pfc::list_base_const_t<metadb_handle_ptr> & p_data) override
         {
             static_api_ptr_t<playlist_manager> api;
-            static_api_ptr_t<lock_manager>()->for_each_playlist (this, [&] (t_size playlist) 
+            for_each_playlist (this->get_guid (), [&] (t_size playlist) 
             {
                 metadb_handle_list playlist_items;
                 api->playlist_get_all_items (playlist, playlist_items);
@@ -51,8 +59,7 @@ namespace playlist_locks
             });
         }
     };
-
-
+    
     namespace
     {
         class library_callback_initializer : public initquit

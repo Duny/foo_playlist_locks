@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="vk_com_api">
+      <UniqueIdentifier>{b6f22522-4451-469b-8412-7a1de5137e94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jsoncpp">
+      <UniqueIdentifier>{7bfb6fbd-f605-4e8f-b505-45f6b0b2a7df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\locks">
+      <UniqueIdentifier>{740f4ea1-429d-45d3-a9cf-da84b5f85e85}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="foo_playlist_locks.cpp">
@@ -21,17 +30,44 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lock_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main_menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lock_library_tracker.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_reader.cpp">
+      <Filter>jsoncpp</Filter>
     </ClCompile>
-    <ClCompile Include="lock_remove_played.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_value.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="$(JSONCPP)\src\lib_json\json_writer.cpp">
+      <Filter>jsoncpp</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="$(FB2K_VK_COM_API)\vk_com_api_methods.cpp">
+      <Filter>vk_com_api</Filter>
+    </ClCompile>
+    <ClCompile Include="library_tracker.cpp">
+      <Filter>Source Files\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="remove_played.cpp">
+      <Filter>Source Files\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="vk_music.cpp">
+      <Filter>Source Files\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="lock_manager.cpp">
+      <Filter>Source Files\locks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -47,10 +83,34 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_auth_browser_dlg.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_external.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_helpers.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_methods.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
+    <ClInclude Include="$(FB2K_VK_COM_API)\vk_com_api_resource.h">
+      <Filter>vk_com_api</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_playlist_locks.rc">
       <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="$(FB2K_VK_COM_API)\vk_com_api_resource.rc">
+      <Filter>vk_com_api</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
